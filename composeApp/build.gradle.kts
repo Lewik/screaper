@@ -25,7 +25,7 @@ kotlin {
         }
         binaries.executable()
     }
-    
+
     jvm("desktop")
     
     sourceSets {
@@ -39,9 +39,20 @@ kotlin {
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(projects.shared)
+            implementation(libs.ktor.client.core)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
+        }
+        val wasmJsMain by getting {
+            dependencies {
+                implementation(compose.runtime)
+                implementation(compose.foundation)
+                implementation(compose.material)
+                implementation(compose.ui)
+                implementation(projects.shared)
+
+            }
         }
     }
 }
