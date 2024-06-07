@@ -104,20 +104,20 @@ fun App() {
             }
 
 
-            Button(onClick = {
-                uriHandler.openUri("http://localhost:8080/screaper/log")
-            }) {
-                Text("Download all results")
-            }
-
-            Button(onClick = {
-                scope.launch {
-                    client.delete("http://localhost:8080/screaper/log")
-                    dialogText = "Results deleted"
-                }
-            }) {
-                Text("Delete all results")
-            }
+//            Button(onClick = {
+//                uriHandler.openUri("http://localhost:8080/screaper/log")
+//            }) {
+//                Text("Download all results")
+//            }
+//
+//            Button(onClick = {
+//                scope.launch {
+//                    client.delete("http://localhost:8080/screaper/log")
+//                    dialogText = "Results deleted"
+//                }
+//            }) {
+//                Text("Delete all results")
+//            }
 
             val modifier = Modifier.align(Alignment.Start)
 
