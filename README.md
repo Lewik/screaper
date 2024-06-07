@@ -3,11 +3,6 @@ Run server in docker: `./gradlew server:runDocker`
 # Run Client
 ## Wasm clint in browser
 Run client: `./gradlew composeApp:wasmJsBrowserRun`
-## Cli
-Run cli: `./gradlew cli:run --args="-m 2"`  
-Run cli: `./gradlew cli:run -q --console=plain --args="--help"`  
-Run cli: `./gradlew cli:run -q --console=plain --args="-m 2"`  
-Run cli: `./gradlew cli:run -q --console=plain  --args="-m 2 -r price=<h1>.*?:\s*(.*?)</h1> -r label2=<p>.*?:\s*(.*?)</p>"`  
 
 ## curl
 ```shell
@@ -38,6 +33,13 @@ fetch("http://0.0.0.0:8080/screaper/calculate/10", {
   "method": "POST"
 });
 ```
+
+# Run cli
+Run cli: `./gradlew cli:run --args="-m 2"`  
+Run cli: `./gradlew cli:run -q --console=plain --args="--help"`  
+Run cli: `./gradlew cli:run -q --console=plain --args="-m 2"`  
+Run cli: `./gradlew cli:run -q --console=plain  --args="-m 2 -r price=<h1>.*?:\s*(.*?)</h1> -r label2=<p>.*?:\s*(.*?)</p>"`  
+
 
 # Code
 Main screaper code is in `shared/src/commonMain/kotlin/screaper`
