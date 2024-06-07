@@ -20,26 +20,24 @@ kotlin {
             }
         }
     }
-    
+
     jvm()
-    
+
     sourceSets {
         commonMain.dependencies {
             implementation(libs.coroutines.core)
 
             implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.logging)
-            implementation(libs.ktor.client.auth)
-            implementation(libs.ktor.client.content.negotiation)
-            implementation(libs.ktor.client.serialization.kotlinx.json)
 
             implementation(libs.serialization)
+            implementation(libs.date.time)
         }
 
         val wasmJsMain by getting {
             dependencies {
-                implementation(libs.ktor.client.js)
+                implementation(libs.ktor.wasm.client.js)
             }
         }
     }
+
 }

@@ -27,10 +27,10 @@ kotlin {
     }
 
     jvm("desktop")
-    
+
     sourceSets {
         val desktopMain by getting
-        
+
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -39,7 +39,12 @@ kotlin {
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(projects.shared)
-            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.wasm.client.core)
+            implementation(libs.ktor.wasm.client.serialization.kotlinx.json)
+            implementation(libs.ktor.wasm.client.content.negotiation)
+            implementation(libs.ktor.wasm.client.logging)
+            implementation(libs.date.time)
+
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -51,7 +56,7 @@ kotlin {
                 implementation(compose.material)
                 implementation(compose.ui)
                 implementation(projects.shared)
-
+                implementation(npm("@js-joda/timezone", "2.3.0"))
             }
         }
     }
