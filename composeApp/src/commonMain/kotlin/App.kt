@@ -28,7 +28,7 @@ fun App() {
         var showContent by remember { mutableStateOf(false) }
         var screaperResult: ScreaperResult? by remember { mutableStateOf(null) }
         var urls by remember { mutableStateOf("http://0.0.0.0:8080/emulator/(i)") }
-        var multiplier by remember { mutableStateOf("1") }
+        var multiplier by remember { mutableStateOf("10") }
         var regexps by remember {
             mutableStateOf(
                 """
@@ -55,7 +55,7 @@ fun App() {
             TextField(
                 value = urls,
                 onValueChange = { urls = it },
-                label = { Text("Urls") }
+                label = { Text("Urls (separate by comma, use (i) for multiplier)") }
             )
 
             TextField(
@@ -67,7 +67,7 @@ fun App() {
             TextField(
                 value = regexps,
                 onValueChange = { regexps = it },
-                label = { Text("Regexps") }
+                label = { Text("Regexps (define regexp in each row, format is label=regexp)") }
             )
 
             Button(onClick = {
