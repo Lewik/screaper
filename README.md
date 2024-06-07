@@ -1,5 +1,6 @@
 Run server in docker: `./gradlew server:runDocker`  
 Run client: `./gradlew composeApp:wasmJsBrowserRun`
+Run cli: ` ./gradlew cli:run --args="-m 2"`
 
 
 Main screaper code is in `shared/src/commonMain/kotlin/screaper`

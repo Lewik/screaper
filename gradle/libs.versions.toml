@@ -3,12 +3,12 @@ compose-plugin = "1.6.10"
 ktor = "2.3.7"
 ktor-wasm = "3.0.0-wasm2"
 logback = "1.4.11"
-#compose = "1.5.4"
 coroutines = "1.8.0-RC2"
 kotlin = "2.0.0"
 junit = "4.13.2"
 date = "0.5.0"
 serialization = "1.6.2"
+clikt = "4.4.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -45,6 +45,8 @@ date-time = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "
 
 
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
+
 
 [plugins]
 jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }
