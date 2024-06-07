@@ -16,6 +16,7 @@ import io.ktor.server.routing.*
 import kotlinx.coroutines.delay
 import screaper.CoroutineScreaper
 import screaper.ScreaperRequest
+import screaper.copyWithMultipliedUrls
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -53,14 +54,7 @@ fun Application.module() {
             var request = call.receive<ScreaperRequest>()
             val multiplier = call.parameters["multiplier"]?.toIntOrNull() ?: 1
 
-            if (multiplier > 0 && request.urls.size == 1) {
-                val url = request.urls.single()
-                request = request.copy(
-                    urls = (1..multiplier).map {
-                        url.replace("(i)", it.toString())
-                    }
-                )
-            }
+            request = request.copyWithMultipliedUrls(multiplier)
 
             val screaperHttpClient = HttpClient {
                 expectSuccess = true
@@ -109,3 +103,4 @@ fun Application.module() {
     }
 
 }
+

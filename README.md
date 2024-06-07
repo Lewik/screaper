@@ -1,6 +1,9 @@
 Run server in docker: `./gradlew server:runDocker`  
 Run client: `./gradlew composeApp:wasmJsBrowserRun`
-Run cli: ` ./gradlew cli:run --args="-m 2"`
+Run cli: `./gradlew cli:run --args="-m 2"`
+Run cli: `./gradlew cli:run -q --console=plain --args="--help"`
+Run cli: `./gradlew cli:run -q --console=plain --args="-m 2"`
+Run cli: `./gradlew cli:run -q --console=plain  --args="-m 2 -r price=<h1>.*?:\s*(.*?)</h1> -r label2=<p>.*?:\s*(.*?)</p>"`
 
 
 Main screaper code is in `shared/src/commonMain/kotlin/screaper`
