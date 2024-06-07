@@ -9,6 +9,7 @@ junit = "4.13.2"
 date = "0.5.0"
 serialization = "1.6.2"
 clikt = "4.4.0"
+mongo = "5.1.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -45,8 +46,11 @@ date-time = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "
 
 
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+
 clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
 
+mongo = { module = "org.mongodb:mongodb-driver-kotlin-coroutine", version.ref = "mongo" }
+bson = { module = "org.mongodb:bson-kotlinx", version.ref = "mongo" }
 
 [plugins]
 jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }

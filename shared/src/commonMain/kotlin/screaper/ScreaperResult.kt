@@ -14,11 +14,11 @@ data class ScreaperResult(
      * each entry contains visited url and result of regexps
      */
     val entries: List<Entry>,
-    val overallDuration: Duration,
+    val overallDuration: Duration?,
     /**
      * when whole task start
      */
-    val overallStartTime: Instant,
+    val overallStartTime: Instant?,
 ) {
     @Serializable
     data class Entry(

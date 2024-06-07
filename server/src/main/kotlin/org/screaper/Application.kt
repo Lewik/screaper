@@ -1,6 +1,7 @@
 package org.screaper
 
 import SERVER_PORT
+import com.mongodb.kotlin.client.coroutine.MongoClient
 import io.ktor.client.*
 import io.ktor.client.plugins.*
 import io.ktor.http.*
@@ -14,11 +15,20 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.toList
+import org.bson.types.ObjectId
 import screaper.CoroutineScreaper
 import screaper.ScreaperRequest
-import screaper.copyWithMultipliedUrls
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+
+
+val connectionString = "mongodb://localhost:27017/screaper"
+val mongoClient = MongoClient.create(connectionString = connectionString)
+val databaseName = "screaper"
+val mongoDb = mongoClient.getDatabase(databaseName = databaseName)
+val screaperLogMongoCollection = mongoDb.getCollection<ScreaperLog>("screaperlog")
+
 
 fun main() {
     embeddedServer(
@@ -26,7 +36,7 @@ fun main() {
         port = SERVER_PORT,
         host = "0.0.0.0",
 //        configure = {
-//            val myParallelism = 32
+//            val myParallelism = 32 # caution!
 //            connectionGroupSize = myParallelism / 2 + 1
 //            workerGroupSize = myParallelism / 2 + 1
 //            callGroupSize = myParallelism
@@ -67,8 +77,28 @@ fun Application.module() {
             )
                 .screap(request)
 
+
+//            try {
+                screaperLogMongoCollection.insertOne(
+                    ScreaperLog(
+                        id = ObjectId(),
+                        result = result,
+                    )
+                )
+//            } catch (throwable: Throwable) {
+//                println(throwable)
+//            }
+
             call.respond(result)
 
+        }
+
+        get("/screaper/log") {
+            call.respond(screaperLogMongoCollection.find().toList())
+        }
+
+        delete("/screaper/log") {
+            call.respond(screaperLogMongoCollection.drop())
         }
 
 

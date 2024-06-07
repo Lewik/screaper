@@ -5,7 +5,9 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -23,8 +25,10 @@ import screaper.ScreaperResult
 @Preview
 fun App() {
     MaterialTheme {
+        val uriHandler = LocalUriHandler.current
         val scope = rememberCoroutineScope()
         var clicked by remember { mutableStateOf(false) }
+        var error: String? by remember { mutableStateOf(null) }
         var showContent by remember { mutableStateOf(false) }
         var screaperResult: ScreaperResult? by remember { mutableStateOf(null) }
         var urls by remember { mutableStateOf("http://0.0.0.0:8080/emulator/(i)") }
@@ -50,7 +54,6 @@ fun App() {
             Modifier
                 .fillMaxWidth()
                 .padding(10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             TextField(
                 value = urls,
@@ -75,25 +78,38 @@ fun App() {
                 clicked = true
                 screaperResult = null
                 scope.launch {
-                    val response: HttpResponse = client.post("http://0.0.0.0:8080/screaper/calculate/${multiplier}") {
-                        setBody(
-                            ScreaperRequest(
-                                urls = urls.split(",").map(String::trim),
-                                regexPatterns = regexps.lines()
-                                    .associate {
-                                        it
-                                            .split("=", limit = 2)
-                                            .let { it.first() to it.last() }
-                                    }
-                            )
-                        )
-                        contentType(ContentType.Application.Json)
+                    try {
+                        val response: HttpResponse =
+                            client.post("http://localhost:8080/screaper/calculate/${multiplier}") {
+                                setBody(
+                                    ScreaperRequest(
+                                        urls = urls.split(",").map(String::trim),
+                                        regexPatterns = regexps.lines()
+                                            .associate {
+                                                it
+                                                    .split("=", limit = 2)
+                                                    .let { it.first() to it.last() }
+                                            }
+                                    )
+                                )
+                                contentType(ContentType.Application.Json)
+                            }
+                        screaperResult = response.body()
+                    } catch (throwable: Throwable) {
+                        error = throwable.toString()
                     }
-                    screaperResult = response.body()
                 }
             }) {
                 Text("Load")
             }
+
+
+            Button(onClick = {
+                uriHandler.openUri("http://localhost:8080/screaper/log")
+            }) {
+                Text("Download logs")
+            }
+
             val modifier = Modifier.align(Alignment.Start)
 
             Card(
@@ -159,6 +175,30 @@ fun App() {
                                     }
                                 }
                             }
+                        }
+                    }
+                }
+            }
+
+            error?.also {
+                Dialog(onDismissRequest = {
+                    error = null
+                    clicked = false
+                    screaperResult = null
+                }) {
+                    Surface(
+                        modifier = Modifier
+                            .wrapContentWidth()
+                            .wrapContentHeight(),
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(text = error ?: "Unknown")
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Button(onClick = {
+                                error = null
+                                clicked = false
+                                screaperResult = null
+                            }) { Text(text = "Ok") }
                         }
                     }
                 }

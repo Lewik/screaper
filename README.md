@@ -1,5 +1,27 @@
 # Run server
 Run server in docker: `./gradlew server:runDocker`
+## Emulator
+There is a builtin emulator-server for testing purposes  
+1 of 10 request will delayed for 10 seconds  
+if not: request fill be delayed from 0 to 1000 milliseconds  
+also, 1 of 5 request will fail with exception  
+
+GET Request to `/emulator/<any number>` will return
+```
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product (<any number>)</title>
+</head>
+<body>
+    <h1>Product Name: Awesome Stuff</h1>
+    <p>Price: $<any number>.99</p>
+</body>
+</html>
+```
+
 # Run Client
 ## Wasm clint in browser
 Run client: `./gradlew composeApp:wasmJsBrowserRun`
