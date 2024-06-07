@@ -28,7 +28,7 @@ fun App() {
         val uriHandler = LocalUriHandler.current
         val scope = rememberCoroutineScope()
         var clicked by remember { mutableStateOf(false) }
-        var error: String? by remember { mutableStateOf(null) }
+        var dialogText: String? by remember { mutableStateOf(null) }
         var showContent by remember { mutableStateOf(false) }
         var screaperResult: ScreaperResult? by remember { mutableStateOf(null) }
         var urls by remember { mutableStateOf("http://0.0.0.0:8080/emulator/(i)") }
@@ -96,18 +96,27 @@ fun App() {
                             }
                         screaperResult = response.body()
                     } catch (throwable: Throwable) {
-                        error = throwable.toString()
+                        dialogText = "Error " + throwable.toString()
                     }
                 }
             }) {
-                Text("Load")
+                Text("Screap")
             }
 
 
             Button(onClick = {
                 uriHandler.openUri("http://localhost:8080/screaper/log")
             }) {
-                Text("Download logs")
+                Text("Download all results")
+            }
+
+            Button(onClick = {
+                scope.launch {
+                    client.delete("http://localhost:8080/screaper/log")
+                    dialogText = "Results deleted"
+                }
+            }) {
+                Text("Delete all results")
             }
 
             val modifier = Modifier.align(Alignment.Start)
@@ -155,7 +164,7 @@ fun App() {
                                                 .fillMaxWidth()
                                         ) {
                                             Row(modifier) {
-                                                Text("Url: ${entry.url.s}")
+                                                Text("Url: ${entry.url}")
                                             }
                                             Row(modifier) {
                                                 Text("Delay time: ${entry.startTime - screaperResult.overallStartTime}, Duration: ${entry.duration}")
@@ -167,7 +176,7 @@ fun App() {
                                             } else {
                                                 entry.results.forEach { (name, value) ->
                                                     Row(modifier) {
-                                                        Text("Name: ${name.s}, Value: ${value.s}")
+                                                        Text("Name: $name, Value: $value")
                                                     }
                                                 }
                                             }
@@ -180,9 +189,9 @@ fun App() {
                 }
             }
 
-            error?.also {
+            dialogText?.also {
                 Dialog(onDismissRequest = {
-                    error = null
+                    dialogText = null
                     clicked = false
                     screaperResult = null
                 }) {
@@ -192,10 +201,10 @@ fun App() {
                             .wrapContentHeight(),
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text(text = error ?: "Unknown")
+                            Text(text = dialogText ?: "Unknown")
                             Spacer(modifier = Modifier.height(24.dp))
                             Button(onClick = {
-                                error = null
+                                dialogText = null
                                 clicked = false
                                 screaperResult = null
                             }) { Text(text = "Ok") }

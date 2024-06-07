@@ -1,7 +1,7 @@
 package org.screaper
 
 import SERVER_PORT
-import com.mongodb.kotlin.client.coroutine.MongoClient
+import com.mongodb.kotlin.client.coroutine.MongoCollection
 import io.ktor.client.*
 import io.ktor.client.plugins.*
 import io.ktor.http.*
@@ -23,12 +23,13 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 
-val connectionString = "mongodb://localhost:27017/screaper"
-val mongoClient = MongoClient.create(connectionString = connectionString)
-val databaseName = "screaper"
-val mongoDb = mongoClient.getDatabase(databaseName = databaseName)
-val screaperLogMongoCollection = mongoDb.getCollection<ScreaperLog>("screaperlog")
+//val connectionString = "mongodb://localhost:27017/screaper"
+//val mongoClient = MongoClient.create(connectionString = connectionString)
+//val databaseName = "screaper"
+//val mongoDb = mongoClient.getDatabase(databaseName = databaseName)
+//val screaperLogMongoCollection = mongoDb.getCollection<ScreaperLog>("screaperlog")
 
+val screaperLogMongoCollection: MongoCollection<ScreaperLog>? = null
 
 fun main() {
     embeddedServer(
@@ -51,6 +52,7 @@ fun Application.module() {
 
     install(CORS) {
         anyHost()
+        allowMethod(HttpMethod.Delete)
         allowHeader(HttpHeaders.ContentType)
     }
     install(ContentNegotiation) {
@@ -78,27 +80,33 @@ fun Application.module() {
                 .screap(request)
 
 
-//            try {
-                screaperLogMongoCollection.insertOne(
-                    ScreaperLog(
-                        id = ObjectId(),
-                        result = result,
+            try {
+                if (screaperLogMongoCollection != null) {
+                    screaperLogMongoCollection.insertOne(
+                        ScreaperLog(
+                            id = ObjectId(),
+                            result = result,
+                        )
                     )
-                )
-//            } catch (throwable: Throwable) {
-//                println(throwable)
-//            }
+                }
+            } catch (throwable: Throwable) {
+                println(throwable)
+            }
 
             call.respond(result)
 
         }
 
         get("/screaper/log") {
-            call.respond(screaperLogMongoCollection.find().toList())
+            if (screaperLogMongoCollection != null) {
+                call.respond(screaperLogMongoCollection.find().toList().map { it.result })
+            }
         }
 
         delete("/screaper/log") {
-            call.respond(screaperLogMongoCollection.drop())
+            if (screaperLogMongoCollection != null) {
+                call.respond(screaperLogMongoCollection.drop())
+            }
         }
 
 

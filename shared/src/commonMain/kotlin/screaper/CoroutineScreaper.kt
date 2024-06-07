@@ -8,8 +8,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
-import screaper.ScreaperResult.Entry.Name
-import screaper.ScreaperResult.Entry.Value
 import kotlin.time.measureTimedValue
 
 /**
@@ -52,9 +50,9 @@ class CoroutineScreaper(
                                     html.extract(regexPatterns) to null
                                 } catch (error: Throwable) {
                                     if (error is ResponseException) {
-                                        emptyMap<Name, Value>() to error.response.toString()
+                                        emptyMap<String, String>() to error.response.toString()
                                     } else {
-                                        emptyMap<Name, Value>() to error.message
+                                        emptyMap<String, String>() to error.message
                                     }
                                 }
                             }
@@ -62,7 +60,7 @@ class CoroutineScreaper(
                             val (results, error) = data
 
                             ScreaperResult.Entry(
-                                url = ScreaperResult.Entry.Url(url),
+                                url = url,
                                 results = results,
                                 duration = duration,
                                 startTime = startTime,
@@ -88,10 +86,8 @@ class CoroutineScreaper(
         regexPatterns: Map<String, String>,
     ) = regexPatterns
         .map { (name, regex) ->
-            Name(name) to Value(
-                // find first result of regexp
-                regex.toRegex().find(this)?.groupValues?.getOrNull(1)
-            )
+            // find first result of regexp
+            name to (regex.toRegex().find(this)?.groupValues?.getOrNull(1) ?: "")
         }
         .toMap()
 }
