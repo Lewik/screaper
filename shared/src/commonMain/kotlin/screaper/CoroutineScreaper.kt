@@ -10,6 +10,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
 import screaper.db.DataRepository
 import screaper.entities.ScreaperLog
+import screaper.extractor.Extractor
 import screaper.utils.generateUuid
 import kotlin.reflect.KClass
 import kotlin.time.measureTimedValue
@@ -102,20 +103,20 @@ class CoroutineScreaper(
 
 
     class ExtractorMap {
-        private val extractors: MutableMap<KClass<*>, Screaper.Extractor<*>> = mutableMapOf()
+        private val extractors: MutableMap<KClass<*>, Extractor<*>> = mutableMapOf()
 
-        fun <T : Screaper.Extractor.Task> add(kClass: KClass<T>, extractor: Screaper.Extractor<T>): ExtractorMap {
+        fun <T : Extractor.Task> add(kClass: KClass<T>, extractor: Extractor<T>): ExtractorMap {
             extractors[kClass] = extractor
             return this
         }
 
-        inline fun <reified T : Screaper.Extractor.Task> add(extractor: Screaper.Extractor<T>) =
+        inline fun <reified T : Extractor.Task> add(extractor: Extractor<T>) =
             add(T::class, extractor)
 
 
-        fun <T : Screaper.Extractor.Task> getFor(task: T): Screaper.Extractor<T> {
+        fun <T : Extractor.Task> getFor(task: T): Extractor<T> {
             @Suppress("UNCHECKED_CAST")
-            return extractors.getValue(task::class) as Screaper.Extractor<T>
+            return extractors.getValue(task::class) as Extractor<T>
         }
     }
 

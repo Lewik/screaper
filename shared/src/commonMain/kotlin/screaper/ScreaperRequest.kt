@@ -1,6 +1,7 @@
 package screaper
 
 import kotlinx.serialization.Serializable
+import screaper.extractor.Extractor
 
 /**
  * Task for screaper
@@ -14,7 +15,7 @@ data class ScreaperRequest(
     /**
      * tasks will be executed on each url
      */
-    val tasks: Map<String, Screaper.Extractor.Task>,
+     val tasks: Map<String, Extractor.Task>,
 ) {
 }
 

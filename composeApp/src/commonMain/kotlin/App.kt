@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
@@ -22,13 +23,15 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import screaper.ScreaperRequest
 import screaper.ScreaperResult
+import screaper.extractor.CssSelectorExtractor
+import screaper.extractor.Extractor
+import screaper.extractor.RegexpExtractor
+import screaper.utils.exhaustive
 
 
 enum class UrlType {
-    Emulator,
-    Common,
+    Emulator, Common,
 }
-
 
 
 @Composable
@@ -46,21 +49,20 @@ fun App() {
         var screaperResult: ScreaperResult? by remember { mutableStateOf(null) }
         var urls by remember { mutableStateOf("http://0.0.0.0:8080/emulator/(i)") }
         var multiplier by remember { mutableStateOf("10") }
-        val defaultRegexps = remember {
+        val defaultTasks = remember {
             listOf(
-                "price" to "<h1>.*?:\\s*(.*?)</h1>",
-                "label" to "<p>.*?:\\s*(.*?)</p>",
+                "price" to CssSelectorExtractor.Task("h1"),
+                "label" to CssSelectorExtractor.Task("p"),
             )
         }
-        val regexps = remember {
+        val tasks: SnapshotStateList<Pair<String, Extractor.Task>> = remember {
             mutableStateListOf(
-                "price" to "<h1>.*?:\\s*(.*?)</h1>",
-                "label" to "<p>.*?:\\s*(.*?)</p>",
+                *defaultTasks.toTypedArray()
             )
         }
         val labelErrors = remember {
             derivedStateOf {
-                regexps
+                tasks
                     .groupingBy { it.first }
                     .eachCount()
                     .filter { it.value > 1 }
@@ -68,18 +70,28 @@ fun App() {
             }
         }
 
-        val regexErrors = remember {
+        val taskErrors = remember {
             derivedStateOf {
-                regexps
-                    .associate { (label, regex) ->
-                        val errors = mutableListOf<String>()
-                        if (regex.isBlank()) {
-                            errors.add("No value")
+                tasks.associate { (label, task) ->
+                    val errors = mutableListOf<String>()
+                    when (task) {
+                        is RegexpExtractor.Task -> {
+                            if (task.regexp.isBlank()) {
+                                errors.add("No value")
+                            }
+                            Unit
                         }
 
-                        label to errors.toList()
-                    }
-                    .filterValues { it.isNotEmpty() }
+                        is CssSelectorExtractor.Task -> {
+                            if (task.cssSelector.isBlank()) {
+                                errors.add("No value")
+                            }
+                            Unit
+                        }
+                    }.exhaustive()
+
+                    label to errors.toList()
+                }.filterValues { it.isNotEmpty() }
             }
         }
 
@@ -167,38 +179,37 @@ fun App() {
                         .padding(16.dp)
                 ) {
                     Text("Regular expressions")
-                    regexps.forEachIndexed { index, (name, regex) ->
+                    tasks.forEachIndexed { index, (name, task) ->
                         Row {
-                            TextField(
-                                value = name,
-                                onValueChange = { regexps[index] = it to regex },
+                            TextField(value = name,
+                                onValueChange = { tasks[index] = it to task },
                                 label = { Text("Name") },
                                 isError = name in labelErrors.value,
                                 supportingText = {
-                                    labelErrors
-                                        .value
-                                        .getOrElse(name) { emptyList() }
-                                        .map { Text(it) }
+                                    labelErrors.value.getOrElse(name) { emptyList() }.map { Text(it) }
                                 }
 
                             )
 
                             TextField(
-                                value = regex,
-                                onValueChange = { regexps[index] = name to it },
-                                label = { Text("Regex") },
-                                isError = name in regexErrors.value,
+                                value = when (task) {
+                                    is RegexpExtractor.Task -> task.regexp
+                                    is CssSelectorExtractor.Task -> task.cssSelector
+                                },
+                                onValueChange = {
+                                    tasks[index] = name to CssSelectorExtractor.Task(it)
+                                },
+                                label = { Text("Task (css selector)") },
+                                isError = name in taskErrors.value,
                                 supportingText = {
-                                    regexErrors
+                                    taskErrors
                                         .value
                                         .getOrElse(name) { emptyList() }
                                         .map { Text(it) }
                                 }
                             )
 
-                            IconButton(
-                                onClick = { regexps.removeAt(index) }
-                            ) {
+                            IconButton(onClick = { tasks.removeAt(index) }) {
                                 Icon(Icons.Outlined.Delete, contentDescription = "delete")
                             }
                         }
@@ -207,19 +218,16 @@ fun App() {
 
                     Row {
                         Button(
-                            onClick = { regexps.add("" to "") }
-                        ) {
+                            onClick = { tasks.add("" to CssSelectorExtractor.Task("")) }) {
                             Text("Add")
                         }
 
                         Spacer(Modifier.size(8.dp))
 
-                        Button(
-                            onClick = {
-                                regexps.clear()
-                                regexps.addAll(defaultRegexps)
-                            }
-                        ) {
+                        Button(onClick = {
+                            tasks.clear()
+                            tasks.addAll(defaultTasks)
+                        }) {
                             Text("Set default")
                         }
                     }
@@ -236,12 +244,13 @@ fun App() {
                     scope.launch {
                         try {
                             val response: HttpResponse =
-                                client.post("http://localhost:8080/screaper/calculate/${multiplier}") {
+                                client.post("http://localhost:8080/screaper/calculate/${if (urlType == UrlType.Emulator) multiplier else null}") {
                                     setBody(
                                         ScreaperRequest(
                                             urls = urls.split(",").map(String::trim),
-                                            tasks = emptyMap()// regexps.associate { it }
-                                        )
+                                            tasks = tasks.associate { (label, task) ->
+                                                label to task
+                                            })
                                     )
                                     contentType(ContentType.Application.Json)
                                 }
@@ -251,7 +260,7 @@ fun App() {
                         }
                     }
                 },
-                enabled = regexErrors.value.isEmpty() && labelErrors.value.isEmpty()
+                enabled = taskErrors.value.isEmpty() && labelErrors.value.isEmpty()
             ) {
                 Text("Screap")
             }
@@ -327,7 +336,7 @@ fun App() {
                                             } else {
                                                 entry.results.forEach { (name, value) ->
                                                     Row(modifier) {
-                                                        Text("Name: $name, Value: $value")
+                                                        Text("Name: $name, Values: $value")
                                                     }
                                                 }
                                             }
