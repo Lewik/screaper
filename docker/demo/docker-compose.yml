@@ -1,0 +1,26 @@
+version: '3.2'
+
+services:
+#  client:
+#    image: screaper/client:latest
+#    build: ../composeApp
+#    links:
+#      - "server:server"
+#    ports:
+#      - "8081:8081"
+
+  server:
+    image: screaper/server:latest
+    volumes:
+      - ./koin.properties:/app/resources/koin.properties
+    links:
+      - "mongodb:mongodb"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:${TAG_MONGO_DB}
+    ports:
+      - "27017:27017"

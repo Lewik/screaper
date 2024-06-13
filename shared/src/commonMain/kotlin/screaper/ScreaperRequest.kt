@@ -12,19 +12,9 @@ data class ScreaperRequest(
      */
     val urls: List<String>,
     /**
-     * regexps will be executed on each url
-     * key - label of regexp
-     * value - regexp to execute
+     * tasks will be executed on each url
      */
-    val regexPatterns: Map<String, String>,
+    val tasks: Map<String, Screaper.Extractor.Task>,
 ) {
-    fun copyWithMultipliedUrls(multiplier: Int) = if (multiplier > 0 && urls.size == 1) {
-        val url = urls.single()
-        val multipliedUrls = (1..multiplier).map {
-            url.replace("(i)", it.toString())
-        }
-        copy(urls = multipliedUrls)
-    } else {
-        this
-    }
 }
+

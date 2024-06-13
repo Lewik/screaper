@@ -1,5 +1,7 @@
+# Build server
+./gradlew server:dockerBuildIma
 # Run server
-Run server in docker: `./gradlew server:runDocker`
+Run server in docker: `docker compose -f docker/demo/docker-compose.yml up`
 ## Emulator
 There is a builtin emulator-server for testing purposes  
 1 of 10 request will delayed for 10 seconds  
@@ -55,13 +57,6 @@ fetch("http://0.0.0.0:8080/screaper/calculate/10", {
   "method": "POST"
 });
 ```
-
-# Run cli
-Run cli: `./gradlew cli:run --args="-m 2"`  
-Run cli: `./gradlew cli:run -q --console=plain --args="--help"`  
-Run cli: `./gradlew cli:run -q --console=plain --args="-m 2"`  
-Run cli: `./gradlew cli:run -q --console=plain  --args="-m 2 -r price=<h1>.*?:\s*(.*?)</h1> -r label2=<p>.*?:\s*(.*?)</p>"`  
-
 
 # Code
 Main screaper code is in `shared/src/commonMain/kotlin/screaper`

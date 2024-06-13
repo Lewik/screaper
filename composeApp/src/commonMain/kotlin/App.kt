@@ -1,7 +1,10 @@
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,6 +24,13 @@ import screaper.ScreaperRequest
 import screaper.ScreaperResult
 
 
+enum class UrlType {
+    Emulator,
+    Common,
+}
+
+
+
 @Composable
 @Preview
 fun App() {
@@ -30,16 +40,47 @@ fun App() {
         var clicked by remember { mutableStateOf(false) }
         var dialogText: String? by remember { mutableStateOf(null) }
         var showContent by remember { mutableStateOf(false) }
+        var urlType by remember { mutableStateOf(UrlType.Emulator) }
+
+
         var screaperResult: ScreaperResult? by remember { mutableStateOf(null) }
         var urls by remember { mutableStateOf("http://0.0.0.0:8080/emulator/(i)") }
         var multiplier by remember { mutableStateOf("10") }
-        var regexps by remember {
-            mutableStateOf(
-                """
-                    price = ${Regex("<h1>.*?:\\s*(.*?)</h1>")}
-                    label = ${Regex("<p>.*?:\\s*(.*?)</p>")}
-                """.trimIndent()
+        val defaultRegexps = remember {
+            listOf(
+                "price" to "<h1>.*?:\\s*(.*?)</h1>",
+                "label" to "<p>.*?:\\s*(.*?)</p>",
             )
+        }
+        var regexps = remember {
+            mutableStateListOf(
+                "price" to "<h1>.*?:\\s*(.*?)</h1>",
+                "label" to "<p>.*?:\\s*(.*?)</p>",
+            )
+        }
+        val labelErrors = remember {
+            derivedStateOf {
+                regexps
+                    .groupingBy { it.first }
+                    .eachCount()
+                    .filter { it.value > 1 }
+                    .mapValues { listOf("Duplicated name") }
+            }
+        }
+
+        val regexErrors = remember {
+            derivedStateOf {
+                regexps
+                    .associate { (label, regex) ->
+                        val errors = mutableListOf<String>()
+                        if (regex.isBlank()) {
+                            errors.add("No value")
+                        }
+
+                        label to errors.toList()
+                    }
+                    .filterValues { it.isNotEmpty() }
+            }
         }
 
         val client by remember {
@@ -55,74 +96,185 @@ fun App() {
                 .fillMaxWidth()
                 .padding(10.dp),
         ) {
-            TextField(
-                value = urls,
-                onValueChange = { urls = it },
-                label = { Text("Urls (separate by comma, use (i) for multiplier)") }
-            )
-
-            TextField(
-                value = multiplier,
-                onValueChange = { multiplier = it },
-                label = { Text("Multiplier") }
-            )
-
-            TextField(
-                value = regexps,
-                onValueChange = { regexps = it },
-                label = { Text("Regexps (define regexp in each row, format is label=regexp)") }
-            )
-
-            Button(onClick = {
-                showContent = !showContent
-                clicked = true
-                screaperResult = null
-                scope.launch {
-                    try {
-                        val response: HttpResponse =
-                            client.post("http://localhost:8080/screaper/calculate/${multiplier}") {
-                                setBody(
-                                    ScreaperRequest(
-                                        urls = urls.split(",").map(String::trim),
-                                        regexPatterns = regexps.lines()
-                                            .associate {
-                                                it
-                                                    .split("=", limit = 2)
-                                                    .let { it.first() to it.last() }
-                                            }
-                                    )
-                                )
-                                contentType(ContentType.Application.Json)
+            Card(
+                modifier = Modifier
+                    .padding(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(16.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text("Url type")
+                        Spacer(Modifier.size(8.dp))
+                        Button(
+                            onClick = { urlType = UrlType.Emulator },
+                            modifier = Modifier,
+                            shape = RoundedCornerShape(topStart = 4.dp, bottomStart = 4.dp),
+                            colors = when (urlType) {
+                                UrlType.Emulator -> ButtonDefaults.buttonColors()
+                                UrlType.Common -> ButtonDefaults.outlinedButtonColors()
                             }
-                        screaperResult = response.body()
-                    } catch (throwable: Throwable) {
-                        dialogText = "Error " + throwable.toString()
+                        )
+                        {
+                            Text("Emulator")
+                        }
+                        Button(
+                            onClick = { urlType = UrlType.Common },
+                            modifier = Modifier,
+                            shape = RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp),
+                            colors = when (urlType) {
+                                UrlType.Emulator -> ButtonDefaults.outlinedButtonColors()
+                                UrlType.Common -> ButtonDefaults.buttonColors()
+                            }
+                        ) {
+                            Text("Common")
+                        }
+
+
+                        Spacer(Modifier.size(8.dp))
+                        when (urlType) {
+                            UrlType.Emulator -> {
+                                TextField(
+                                    value = multiplier,
+                                    onValueChange = { multiplier = it },
+                                    label = { Text("How many requests to send") }
+                                )
+                            }
+
+                            UrlType.Common -> {
+                                TextField(
+                                    value = urls,
+                                    onValueChange = { urls = it },
+                                    label = { Text("Urls (separate by comma)") }
+                                )
+                            }
+                        }
                     }
                 }
-            }) {
+            }
+
+            Spacer(modifier = Modifier.size(16.dp))
+
+            Card(
+                modifier = Modifier
+                    .padding(8.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                ) {
+                    Text("Regular expressions")
+                    regexps.forEachIndexed { index, (name, regex) ->
+                        Row {
+                            TextField(
+                                value = name,
+                                onValueChange = { regexps[index] = it to regex },
+                                label = { Text("Name") },
+                                isError = name in labelErrors.value,
+                                supportingText = {
+                                    labelErrors
+                                        .value
+                                        .getOrElse(name) { emptyList() }
+                                        .map { Text(it) }
+                                }
+
+                            )
+
+                            TextField(
+                                value = regex,
+                                onValueChange = { regexps[index] = name to it },
+                                label = { Text("Regex") },
+                                isError = name in regexErrors.value,
+                                supportingText = {
+                                    regexErrors
+                                        .value
+                                        .getOrElse(name) { emptyList() }
+                                        .map { Text(it) }
+                                }
+                            )
+
+                            IconButton(
+                                onClick = { regexps.removeAt(index) }
+                            ) {
+                                Icon(Icons.Outlined.Delete, contentDescription = "delete")
+                            }
+                        }
+                    }
+
+
+                    Row {
+                        Button(
+                            onClick = { regexps.add("" to "") }
+                        ) {
+                            Text("Add")
+                        }
+
+                        Spacer(Modifier.size(8.dp))
+
+                        Button(
+                            onClick = {
+                                regexps.clear()
+                                regexps.addAll(defaultRegexps)
+                            }
+                        ) {
+                            Text("Set default")
+                        }
+                    }
+                }
+            }
+
+
+
+            Button(
+                onClick = {
+                    showContent = !showContent
+                    clicked = true
+                    screaperResult = null
+                    scope.launch {
+                        try {
+                            val response: HttpResponse =
+                                client.post("http://localhost:8080/screaper/calculate/${multiplier}") {
+                                    setBody(
+                                        ScreaperRequest(
+                                            urls = urls.split(",").map(String::trim),
+                                            tasks = emptyMap()// regexps.associate { it }
+                                        )
+                                    )
+                                    contentType(ContentType.Application.Json)
+                                }
+                            screaperResult = response.body()
+                        } catch (throwable: Throwable) {
+                            dialogText = "Error " + throwable.toString()
+                        }
+                    }
+                },
+                enabled = regexErrors.value.isEmpty() && labelErrors.value.isEmpty()
+            ) {
                 Text("Screap")
             }
 
 
-//            Button(onClick = {
-//                uriHandler.openUri("http://localhost:8080/screaper/log")
-//            }) {
-//                Text("Download all results")
-//            }
-//
-//            Button(onClick = {
-//                scope.launch {
-//                    client.delete("http://localhost:8080/screaper/log")
-//                    dialogText = "Results deleted"
-//                }
-//            }) {
-//                Text("Delete all results")
-//            }
+            Button(onClick = {
+                uriHandler.openUri("http://localhost:8080/screaper/log")
+            }) {
+                Text("Download all results")
+            }
+
+            Button(onClick = {
+                scope.launch {
+                    client.delete("http://localhost:8080/screaper/log")
+                    dialogText = "Results deleted"
+                }
+            }) {
+                Text("Delete all results")
+            }
 
             val modifier = Modifier.align(Alignment.Start)
 
             Card(
-                elevation = 4.dp,
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
@@ -156,7 +308,6 @@ fun App() {
                             Column {
                                 screaperResult.entries.forEach { entry ->
                                     Card(
-                                        elevation = 4.dp
                                     ) {
                                         Column(
                                             modifier = Modifier

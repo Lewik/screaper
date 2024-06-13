@@ -31,6 +31,13 @@ kotlin {
 
             implementation(libs.serialization)
             implementation(libs.date.time)
+            api(project.dependencies.platform(libs.koin.bom))
+            api(libs.koin.core)
+
+        }
+
+        jvmMain.dependencies {
+            implementation(libs.ksoup)
         }
 
         val wasmJsMain by getting {

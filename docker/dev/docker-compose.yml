@@ -1,0 +1,7 @@
+version: '3.2'
+
+services:
+  mongodb:
+    image: mongo:${TAG_MONGO_DB}
+    ports:
+      - "27017:27017"

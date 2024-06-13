@@ -1,15 +1,30 @@
 plugins {
     alias(libs.plugins.kotlinJvm)
-    alias(libs.plugins.ktor)
+//    alias(libs.plugins.ktor)
     alias(libs.plugins.serialization)
     application
+    alias(libs.plugins.bmuschko.docker.java.application)
 }
 
 group = "org.screaper"
 version = "1.0.0"
 application {
-    mainClass.set("org.screaper.ApplicationKt")
+    mainClass.set("org.screaper.system.ApplicationKt")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "false"}")
+}
+
+docker {
+    javaApplication {
+        maintainer.set("screaper")
+        ports.set(emptyList())
+        baseImage.set("azul/zulu-openjdk:22")
+
+        images.set(
+            setOf(
+                "screaper/$name:latest",
+            )
+        )
+    }
 }
 
 dependencies {
@@ -36,18 +51,4 @@ dependencies {
 
     testImplementation(libs.ktor.server.tests)
     testImplementation(libs.kotlin.test.junit)
-}
-
-ktor {
-    docker {
-        portMappings.set(
-            listOf(
-                io.ktor.plugin.features.DockerPortMapping(
-                    8080,
-                    8080,
-                    io.ktor.plugin.features.DockerPortMappingProtocol.TCP
-                )
-            )
-        )
-    }
 }

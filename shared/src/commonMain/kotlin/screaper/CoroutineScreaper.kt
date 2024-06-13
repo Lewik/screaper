@@ -8,18 +8,29 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
+import screaper.db.DataRepository
+import screaper.entities.ScreaperLog
+import screaper.utils.generateUuid
+import kotlin.reflect.KClass
 import kotlin.time.measureTimedValue
 
 /**
  * Implementation of screaper based on kotlin coroutines
  */
 class CoroutineScreaper(
-    val client: HttpClient,
+    private val client: HttpClient,
+    private val extractorMap: ExtractorMap,
+    private val screaperLogDataRepository: DataRepository<ScreaperLog>,
 ) : Screaper {
+
     //suspend is kotlin version of async/await
-    override suspend fun screap(request: ScreaperRequest): ScreaperResult {
+    override suspend fun screap(_request: ScreaperRequest, multiplier: Int?): ScreaperResult {
+        val request = if (multiplier != null) {
+            _request.copyWithMultipliedUrls(multiplier)
+        } else {
+            _request
+        }
         val urls = request.urls
-        val regexPatterns = request.regexPatterns
         val taskStartTime = Clock.System.now()
         // coroutineScope will allow to run multiple coroutines inside and await them.
         val (entries, overallDuration) = coroutineScope {
@@ -33,9 +44,7 @@ class CoroutineScreaper(
                  * Default limit is 64 threads or the number of cores (whichever is larger).
                  * If we run this code on js - it will use single thread but still in async way.
                  * I think, it's possible to run WebWorkers for this task, but it will consume more code due WebWorkers limitations.
-                 * Bur for wasm there should not be any restrictions and code should work as is.
-                 *
-                 *
+                 * But for wasm there should not be any restrictions and code should work as is.
                  */
 
                 urls
@@ -47,12 +56,14 @@ class CoroutineScreaper(
                                 try {
                                     // request execution
                                     val html = client.get(url).bodyAsText()
-                                    html.extract(regexPatterns) to null
+                                    request
+                                        .tasks
+                                        .mapValues { extractorMap.getFor(it.value).extract(it.value, html) } to null
                                 } catch (error: Throwable) {
                                     if (error is ResponseException) {
-                                        emptyMap<String, String>() to error.response.toString()
+                                        emptyMap<String, List<String>>() to error.response.toString()
                                     } else {
-                                        emptyMap<String, String>() to error.message
+                                        emptyMap<String, List<String>>() to error.message
                                     }
                                 }
                             }
@@ -72,22 +83,49 @@ class CoroutineScreaper(
             }
         }
 
-        return ScreaperResult(
+        val result = ScreaperResult(
             entries = entries,
             overallDuration = overallDuration,
             overallStartTime = taskStartTime,
         )
+
+
+        screaperLogDataRepository.upsert(
+            ScreaperLog(
+                id = generateUuid().toString(),
+                result = result,
+            )
+        )
+
+        return result
     }
 
-    /**
-     * kotlin feature Extension functions (syntax sugar): we can declare function for particular type and for particular scope
-     */
-    private fun String.extract(
-        regexPatterns: Map<String, String>,
-    ) = regexPatterns
-        .map { (name, regex) ->
-            // find first result of regexp
-            name to (regex.toRegex().find(this)?.groupValues?.getOrNull(1) ?: "")
+
+    class ExtractorMap {
+        private val extractors: MutableMap<KClass<*>, Screaper.Extractor<*>> = mutableMapOf()
+
+        fun <T : Screaper.Extractor.Task> add(kClass: KClass<T>, extractor: Screaper.Extractor<T>): ExtractorMap {
+            extractors[kClass] = extractor
+            return this
         }
-        .toMap()
+
+        inline fun <reified T : Screaper.Extractor.Task> add(extractor: Screaper.Extractor<T>) =
+            add(T::class, extractor)
+
+
+        fun <T : Screaper.Extractor.Task> getFor(task: T): Screaper.Extractor<T> {
+            @Suppress("UNCHECKED_CAST")
+            return extractors.getValue(task::class) as Screaper.Extractor<T>
+        }
+    }
+
+    private fun ScreaperRequest.copyWithMultipliedUrls(multiplier: Int) = if (multiplier > 0 && urls.size == 1) {
+        val url = urls.single()
+        val multipliedUrls = (1..multiplier).map {
+            url.replace("(i)", it.toString())
+        }
+        copy(urls = multipliedUrls)
+    } else {
+        this
+    }
 }

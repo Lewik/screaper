@@ -22,7 +22,7 @@ data class ScreaperResult(
     @Serializable
     data class Entry(
         val url: String,
-        val results: Map<String, String>,
+        val results: Map<String, List<String>>,
         val duration: Duration,
         val startTime: Instant,
         val error: String?,
