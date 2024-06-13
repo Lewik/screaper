@@ -52,7 +52,7 @@ fun App() {
                 "label" to "<p>.*?:\\s*(.*?)</p>",
             )
         }
-        var regexps = remember {
+        val regexps = remember {
             mutableStateListOf(
                 "price" to "<h1>.*?:\\s*(.*?)</h1>",
                 "label" to "<p>.*?:\\s*(.*?)</p>",
@@ -247,7 +247,7 @@ fun App() {
                                 }
                             screaperResult = response.body()
                         } catch (throwable: Throwable) {
-                            dialogText = "Error " + throwable.toString()
+                            dialogText = "Error $throwable"
                         }
                     }
                 },

@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.kotlinJvm)
-//    alias(libs.plugins.ktor)
     alias(libs.plugins.serialization)
     application
     alias(libs.plugins.bmuschko.docker.java.application)
@@ -13,6 +12,7 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=${extra["io.ktor.development"] ?: "false"}")
 }
 
+//generating docker file and provide other docker features for server application
 docker {
     javaApplication {
         maintainer.set("screaper")
@@ -41,14 +41,11 @@ dependencies {
     implementation(libs.ktor.client.serialization.kotlinx.json)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.client.cio)
-    implementation(libs.ktor.client.logging)
 
 
     implementation(libs.date.time)
     implementation(libs.mongo)
     implementation(libs.bson)
 
-
-    testImplementation(libs.ktor.server.tests)
     testImplementation(libs.kotlin.test.junit)
 }

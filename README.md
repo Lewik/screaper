@@ -1,5 +1,11 @@
+# TLDR
+build server: `./gradlew server:dockerBuildImage`  
+run server: `docker compose -f docker/demo/docker-compose.yml up`  
+run client: `./gradlew composeApp:wasmJsBrowserRun`  
+
+# Details
 # Build server
-./gradlew server:dockerBuildIma
+`./gradlew server:dockerBuildImage`
 # Run server
 Run server in docker: `docker compose -f docker/demo/docker-compose.yml up`
 ## Emulator
@@ -69,7 +75,3 @@ ane changes
 ### Some kotlin specific things  
  - No parentheses for trailing lambda https://kotlinlang.org/docs/lambdas.html#passing-trailing-lambdas  
  - `it` parameter: https://kotlinlang.org/docs/lambdas.html#it-implicit-name-of-a-single-parameter
-
-### Mongo
-(need to uncomment)
-`docker run -p 27017:27017 mongo:latest`

@@ -44,7 +44,6 @@ kotlin {
             implementation(libs.ktor.wasm.client.core)
             implementation(libs.ktor.wasm.client.serialization.kotlinx.json)
             implementation(libs.ktor.wasm.client.content.negotiation)
-            implementation(libs.ktor.wasm.client.logging)
             implementation(libs.date.time)
 
         }

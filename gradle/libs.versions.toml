@@ -22,13 +22,15 @@ kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotl
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
-ktor-server-tests = { module = "io.ktor:ktor-server-tests-jvm", version.ref = "ktor" }
-kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+
+coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
+date-time = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "date" }
+
 
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
 ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
-ktor-server-status-pages = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor" }
 ktor-server-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
 
@@ -38,32 +40,29 @@ ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
-ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
 
+# ktor for wasm available only in 3 verion
 ktor-wasm-client-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor-wasm" }
 ktor-wasm-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor-wasm" }
 ktor-wasm-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor-wasm" }
 ktor-wasm-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor-wasm" }
 ktor-wasm-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor-wasm" }
-ktor-wasm-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor-wasm" }
-
-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
-date-time = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "date" }
 
 
-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 
+# Multiplatform command line parser
 clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
 
 mongo = { module = "org.mongodb:mongodb-driver-kotlin-coroutine", version.ref = "mongo" }
 bson = { module = "org.mongodb:bson-kotlinx", version.ref = "mongo" }
+# html parser for css selector
 ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
 
 [plugins]
 jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-#ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+#docker plugin
 bmuschko-docker-java-application = { id = "com.bmuschko.docker-java-application", version.ref = "bmuschko-docker" }
